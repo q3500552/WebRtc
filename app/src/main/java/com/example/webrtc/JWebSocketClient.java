@@ -5,8 +5,12 @@ import com.example.webrtc.MainActivity;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 public class JWebSocketClient extends WebSocketClient {
 
@@ -15,12 +19,25 @@ public class JWebSocketClient extends WebSocketClient {
     @Override
     public void onOpen(ServerHandshake handshakedata) {
         Log.e("JWebSocketClient", "onOpen()");
+        Map<String, String> map = new HashMap<>();
+        map.put("id","register");
+        map.put("username", WebRtcActivity.username);
+        JSONObject jsonObject=new JSONObject(map);
+        send(jsonObject.toString());
     }
 
     @Override
     public void onMessage(String message) {
-        Log.e("JWebSocketClient", "onMessage()");
-        MainActivity.textView.setText(message);
+        Log.e("JWebSocketClient", message);
+        try {
+            JSONObject jsonObject = new JSONObject(message);
+            String name = (String) jsonObject.get("username");
+            String text = (String) jsonObject.get("text");
+            WebRtcActivity.textView.setText(name+": "+text);
+        } catch (JSONException e) {
+            Log.e("JWebSocketClient", "Line 35");
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -28,5 +45,6 @@ public class JWebSocketClient extends WebSocketClient {
 
     @Override
     public void onError(Exception ex) { Log.e("JWebSocketClient", "onError()"); } }
+
 
 
