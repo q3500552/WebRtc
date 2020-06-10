@@ -1,0 +1,2 @@
+SDP:此瀏覽器目前影音資訊
+Ice Candidates:通道訊息

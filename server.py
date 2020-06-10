@@ -1,19 +1,12 @@
 from websocket_server import WebsocketServer
 import json
 
-def findUser(username, clients):
-    index = 0
-    for i in clients:
-        #print("Line7: "+i)
-        if i["username"] != username:
-            return index
-        index = index+1
-    return index
+
 # Called for every client connecting (after handshake)
 def new_client(client, server):
     print("New client connected and was given id %d" % client['id'])
     #server.send_message_to_all('{"id": "register_response", "isSucceed": "1"}')
-    server.send_message(client, 'register_response')
+    server.send_message(client, '{"id": "register_response", "isSucceed": "1"}')
 
 
 # Called for every client disconnecting
@@ -24,19 +17,28 @@ def client_left(client, server):
 # Called when a client sends a message
 def message_received(client, server, message):
     print("Client(%d) said: %s" % (client['id'], message))
-    try:
-        meg_json = json.loads(message)
-        if meg_json["id"] == "register":
-            client["username"] = meg_json["username"]
+    mes_json = json.loads(message)
+    print(mes_json['id'])
+    if mes_json['id'] == 'call':
+        if client['id'] != server.clients[0]['id']:
+            server.send_message(server.clients[0], '{"id": "incall", "isSucceed": "0"}')    
         else:
-            client["username"] = meg_json["username"]
-            client["text"] = meg_json["text"]
-            client_num = findUser(client["username"], server.clients)
-            print(client_num)
-            server.send_message(server.clients[client_num], message)
-    except:
-        print("收到"+message)
-    
+            server.send_message(server.clients[1], '{"id": "incall", "isSucceed": "0"}')
+    elif mes_json['id'] == 'incall':  
+        if client['id'] != server.clients[0]['id']:
+            server.send_message(server.clients[0], '{"id": "incall_response", "isSucceed": "1"}')
+        else:
+            server.send_message(server.clients[1], '{"id": "incall_response", "isSucceed": "1"}')
+    elif mes_json['id'] == "offer":
+        if client['id'] != server.clients[0]['id']:
+            server.send_message(server.clients[0], message)
+        else:
+            server.send_message(server.clients[1], message)
+    elif mes_json['id'] == "candidate":
+        if client['id'] != server.clients[0]['id']:
+            server.send_message(server.clients[0], message)
+        else:
+            server.send_message(server.clients[1], message)
     
 PORT=9001
 server = WebsocketServer(PORT, "0.0.0.0")
